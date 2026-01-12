@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Resumo Clínico de Exames</title>
+
+<style>
+body { font-family: Arial, sans-serif; background:#f4f6f8; padding:20px; }
+h1 { margin-bottom:5px; }
+.subtitle { font-size:15px; color:#444; margin-bottom:15px; }
+.price { background:#e8f1ff; border-left:5px solid #2b6cb0; padding:12px; font-size:16px; margin-bottom:15px; }
+.section { background:#fff; padding:15px; margin-top:15px; border-radius:6px; }
+textarea { width:100%; height:180px; }
+input { padding:8px; width:260px; }
+button { padding:8px 16px; margin-top:8px; cursor:pointer; }
+.output { background:#eef2f5; padding:10px; border-radius:4px; font-weight:bold; user-select:all; }
+.help { background:#f9fafb; border-left:4px solid #4a90e2; padding:10px; margin-bottom:10px; font-size:14px; }
+.notice { background:#fff6e5; border-left:4px solid #f0ad4e; padding:10px; font-size:13px; margin-top:15px; }
+footer { margin-top:25px; font-size:12px; color:#555; line-height:1.5; }
+</style>
+</head>
+
+<body>
+
+<h1>Resumo Clínico de Exames</h1>
+<div class="subtitle">
+Ferramenta de apoio à escrita médica para plantão e rotina clínica.
+</div>
+
+<div class="price">
+<b>Assinatura anual:</b> R$ 99,00
+</div>
+
+<div class="notice">
+<b>Aviso:</b> Ferramenta de apoio à organização e escrita médica.
+Não realiza diagnóstico, não sugere tratamento e não substitui julgamento clínico.
+</div>
+
+<!-- TELA DE ATIVAÇÃO -->
+<div class="section" id="ativacao">
+<b>Ativação anual (CPF)</b><br>
+<input id="cpf" placeholder="Digite seu CPF">
+<button onclick="ativar()">Ativar</button>
+<p style="font-size:12px;color:#666">
+O CPF é utilizado apenas como chave técnica (hash). Nenhum dado clínico é armazenado.
+</p>
+</div>
+
+<!-- APP (COMEÇA OCULTO) -->
+<div class="section" id="app" style="display:none">
+
+<div class="help">
+<b>Como usar:</b><br>
+1️⃣ Abra a <b>aba de exames</b> no MV<br>
+2️⃣ Pressione <b>Ctrl + A</b><br>
+3️⃣ Pressione <b>Ctrl + C</b><br>
+4️⃣ Cole abaixo (<b>Ctrl + V</b>)<br>
+5️⃣ Clique em <b>Gerar resumo</b>
+</div>
+
+<textarea id="texto"></textarea>
+<br>
+<button onclick="processar()">Gerar resumo</button>
+
+<p><b>📋 Exames para evolução:</b></p>
+<div id="linha" class="output"></div>
+<button onclick="copiar()">📋 Copiar</button>
+
+<p><b>🧠 Organização dos exames:</b></p>
+<div id="interp"></div>
+
+<div class="notice">
+A interpretação final e qualquer conduta clínica são de responsabilidade exclusiva do profissional.
+</div>
+
+</div>
+
+<footer>
+<b>Pix para assinatura:</b> aeventurini@gmail.com<br><br>
+Processamento 100% local no navegador, sem acesso a sistemas hospitalares ou transmissão de dados.
+</footer>
+
+<script>
+function normalizarCPF(cpf){
+  return cpf.replace(/\D/g,"");
+}
+
+function ativar(){
+  const cpf = normalizarCPF(document.getElementById("cpf").value);
+  if(cpf.length !== 11){
+    alert("CPF inválido");
+    return;
+  }
+
+  // Ativa SOMENTE após clicar
+  document.getElementById("ativacao").style.display = "none";
+  document.getElementById("app").style.display = "block";
+}
+
+function processar(){
+  const t=document.getElementById("texto").value.toUpperCase();
+  let exames=[];
+
+  function pegar(r){
+    const m=t.match(r);
+    if(!m) return null;
+    return m[1].replace(",",".");
+  }
+
+  function add(n,v){ exames.push(`${n} ${v}`); }
+
+  let hb=pegar(/HEMOGLOBINA\s+([\d,]+)/); if(hb) add("Hb",hb);
+  let ht=pegar(/HEMAT[ÓO]CRITO\s+([\d,]+)/); if(ht) add("Ht",ht+"%");
+  let leuc=pegar(/LEUC[ÓO]CITOS\s+([\d\.]+)/); if(leuc) add("Leuc",leuc);
+  let seg=pegar(/SEGMENTAD[OA]S?\s+([\d,]+)/); if(seg) add("Seg",seg+"%");
+  let bast=pegar(/BAST[ÕO]ES?\s+([\d,]+)/); if(bast) add("Bast",bast+"%");
+  let linf=pegar(/LINF[ÓO]CITOS\s+([\d,]+)/); if(linf) add("Linf",linf+"%");
+  let eos=pegar(/EOSIN[ÓO]FILOS\s+([\d,]+)/); if(eos) add("Eos",eos+"%");
+  let plaq=pegar(/PLAQUETAS\s+([\d\.]+)/); if(plaq) add("Plaq",plaq);
+
+  let ureia=pegar(/UR[ÉE]IA\s+([\d,]+)/); if(ureia) add("Ureia",ureia);
+  let cr=pegar(/CREATININA\s+([\d,]+)/); if(cr) add("Cr",cr);
+  let pcr=pegar(/(PCR|PROTE[IÍ]NA C REATIVA)\s+([\d,]+)/); if(pcr) add("PCR",pcr);
+
+  document.getElementById("linha").innerText=exames.join(" | ");
+  document.getElementById("interp").innerText=
+    exames.length ? "Exames organizados conforme solicitado." : "Nenhum exame reconhecido.";
+}
+
+function copiar(){
+  navigator.clipboard.writeText(document.getElementById("linha").innerText);
+  alert("Exames copiados!");
+}
+</script>
+
+</body>
+</html>
